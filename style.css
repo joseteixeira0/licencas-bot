@@ -1,0 +1,205 @@
+/* RESET BÁSICO */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f6f8;
+  color: #333;
+  padding: 20px;
+}
+
+/* HEADER */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 2rem;
+  color: #2c3e50;
+}
+
+header button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+header button:hover {
+  background-color: #2980b9;
+}
+
+/* SEÇÕES */
+section {
+  background-color: white;
+  padding: 20px 25px;
+  margin-bottom: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+section h2 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+  font-size: 1.4rem;
+}
+
+/* INPUTS */
+input[type="text"],
+input[type="number"] {
+  width: calc(100% - 20px);
+  max-width: 250px;
+  padding: 10px 12px;
+  margin-right: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+/* CHECKBOX */
+label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+label input[type="checkbox"] {
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+/* BOTÕES */
+button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #27ae60;
+}
+
+/* TABELA */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+thead {
+  background-color: #3498db;
+  color: white;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+}
+
+tbody tr {
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+
+tbody tr:hover {
+  background-color: #f1f6fb;
+  cursor: default;
+}
+
+/* STATUS */
+td {
+  font-weight: 500;
+}
+
+td button {
+  background-color: #e67e22;
+  margin-right: 5px;
+}
+
+td button:hover {
+  background-color: #d35400;
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  th {
+    display: none;
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  td button {
+    margin: 5px 0 0 0;
+  }
+}
+
+
+/* BOTÕES DA TABELA */
+td button {
+  margin-right: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  border: none;
+  transition: 0.3s;
+}
+
+/* Revogar - vermelho */
+td button.revogar {
+  background-color: #e74c3c;
+}
+
+td button.revogar:hover {
+  background-color: #c0392b;
+}
+
+/* Bloquear/Desbloquear - verde */
+td button.bloquear {
+  background-color: #2ecc71;
+}
+
+td button.bloquear:hover {
+  background-color: #27ae60;
+}

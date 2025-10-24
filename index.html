@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Licenças</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🔑 Gerenciador de Licenças</h1>
+    <button id="btnAtualizar">Atualizar</button>
+  </header>
+
+  <main>
+    <section id="novaLicenca">
+  <h2>Gerar nova licença</h2>
+  
+  <input id="cliente" type="text" placeholder="Nome do cliente">
+
+  
+  <input id="dias" type="number" placeholder="Dias válidos" value="30">
+
+  <label>
+    <input id="tempoIlimitado" type="checkbox">
+    Tempo ilimitado
+  </label>
+
+
+
+  <button id="btnGerar">Gerar</button>
+
+  
+</section>
+
+
+    <section id="listaLicencas">
+      <h2>Licenças</h2>
+      <table>
+        <thead>
+          <tr><th>Cliente</th><th>Chave</th><th>Validade</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="tabelaLicencas"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

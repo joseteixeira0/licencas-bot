@@ -1,0 +1,22 @@
+[
+  {
+    "id": "f0e932c0-6c1b-4274-a3c0-4c529045d032",
+    "cliente": "Jose teixeira",
+    "chave": "FF7E4D2D9C1EB4C2",
+    "validade": "2025-11-22T01:29:25.224Z",
+    "ativa": true,
+    "bloqueado": false,
+    "criacao": "2025-10-23T01:29:25.224Z",
+    "ativacoes": []
+  },
+  {
+    "id": "dbff5793-8931-4286-8e0b-0a5459d45e7c",
+    "cliente": "Primeiro Cliente",
+    "chave": "CBA9BF3A12CAC398",
+    "validade": "2025-11-22T01:31:53.304Z",
+    "ativa": true,
+    "bloqueado": false,
+    "criacao": "2025-10-23T01:31:53.304Z",
+    "ativacoes": []
+  }
+]
