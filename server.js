@@ -28,7 +28,7 @@ function salvarLicencas(licencas) {
 // ==========================
 // Criar nova licença
 app.post("/api/criar", (req, res) => {
-  const { cliente, dias } = req.body;
+  const { cliente, dias, maxDevices = 1 } = req.body;
   const licencas = carregarLicencas();
 
   const chave = crypto.randomBytes(8).toString("hex").toUpperCase();
@@ -47,7 +47,8 @@ app.post("/api/criar", (req, res) => {
     ativa: true,
     bloqueado: false,
     criacao: new Date().toISOString(),
-    ativacoes: []
+    maxDevices: Number(maxDevices),
+    devices: [] // cada ativação vai ser registrada aqui
   };
 
   licencas.push(nova);
@@ -65,7 +66,7 @@ app.get("/api/licencas", (req, res) => {
 // ==========================
 // Buscar licença por chave
 app.get("/api/licencas/:chave", (req, res) => {
-  const chave = req.params.chave.toUpperCase(); // maiúscula
+  const chave = req.params.chave.toUpperCase();
   const licencas = carregarLicencas();
   const lic = licencas.find(l => l.chave.toUpperCase() === chave);
 
@@ -74,13 +75,58 @@ app.get("/api/licencas/:chave", (req, res) => {
   res.json(lic);
 });
 
+// ==========================
+// Ativar licença (verifica dispositivo)
+app.post("/api/ativar", (req, res) => {
+  const { chave, deviceId } = req.body;
+  if (!chave || !deviceId)
+    return res.status(400).json({ erro: "Chave e deviceId são obrigatórios" });
+
+  const licencas = carregarLicencas();
+  const lic = licencas.find(l => l.chave.toUpperCase() === chave.toUpperCase());
+
+  if (!lic) return res.status(404).json({ erro: "Licença não encontrada" });
+  if (!lic.ativa) return res.status(403).json({ erro: "Licença revogada" });
+  if (lic.bloqueado) return res.status(403).json({ erro: "Licença bloqueada" });
+
+  // Verifica validade
+  if (lic.validade && new Date(lic.validade) < new Date()) {
+    lic.ativa = false;
+    salvarLicencas(licencas);
+    return res.status(403).json({ erro: "Licença expirada" });
+  }
+
+  // Controle de dispositivos
+  if (!lic.devices) lic.devices = [];
+  const jaAtivo = lic.devices.includes(deviceId);
+
+  if (!jaAtivo && lic.devices.length >= lic.maxDevices) {
+    return res.status(403).json({ erro: "Limite de dispositivos atingido" });
+  }
+
+  if (!jaAtivo) lic.devices.push(deviceId);
+
+  salvarLicencas(licencas);
+  res.json({
+    sucesso: true,
+    mensagem: jaAtivo
+      ? "Dispositivo já registrado."
+      : "Licença ativada com sucesso.",
+    chave: lic.chave,
+    cliente: lic.cliente,
+    validade: lic.validade,
+    dispositivos: lic.devices.length,
+    limite: lic.maxDevices
+  });
+});
 
 // ==========================
 // Bloquear/Desbloquear licença
 app.post("/api/bloquear/:id", (req, res) => {
   const { senha } = req.body;
-  const MASTER_SENHA = "123456"; // Defina uma senha forte
-  if (senha !== MASTER_SENHA) return res.status(403).json({ erro: "Senha incorreta" });
+  const MASTER_SENHA = "123456"; // senha admin
+  if (senha !== MASTER_SENHA)
+    return res.status(403).json({ erro: "Senha incorreta" });
 
   const licencas = carregarLicencas();
   const lic = licencas.find(l => l.id === req.params.id);

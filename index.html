@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Licenças</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,32 +13,39 @@
   </header>
 
   <main>
+    <!-- SEÇÃO NOVA LICENÇA -->
     <section id="novaLicenca">
-  <h2>Gerar nova licença</h2>
-  
-  <input id="cliente" type="text" placeholder="Nome do cliente">
+      <h2>Gerar nova licença</h2>
 
-  
-  <input id="dias" type="number" placeholder="Dias válidos" value="30">
+      <div class="form-grid">
+        <input id="cliente" type="text" placeholder="Nome do cliente">
+        <input id="dias" type="number" placeholder="Dias válidos" value="30">
 
-  <label>
-    <input id="tempoIlimitado" type="checkbox">
-    Tempo ilimitado
-  </label>
+        <label>
+          <input id="tempoIlimitado" type="checkbox">
+          Tempo ilimitado
+        </label>
 
+        <label for="limite">Limite de dispositivos:</label>
+        <input id="limite" type="number" min="1" value="1">
+      </div>
 
+      <button id="btnGerar">Gerar</button>
+    </section>
 
-  <button id="btnGerar">Gerar</button>
-
-  
-</section>
-
-
+    <!-- SEÇÃO LISTA DE LICENÇAS -->
     <section id="listaLicencas">
       <h2>Licenças</h2>
       <table>
         <thead>
-          <tr><th>Cliente</th><th>Chave</th><th>Validade</th><th>Status</th><th>Ações</th></tr>
+          <tr>
+            <th>Cliente</th>
+            <th>Chave</th>
+            <th>Validade</th>
+            <th>Status</th>
+            <th>Usados/Limite</th>
+            <th>Ações</th>
+          </tr>
         </thead>
         <tbody id="tabelaLicencas"></tbody>
       </table>
