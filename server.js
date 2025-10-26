@@ -117,6 +117,8 @@ app.delete("/api/excluir/:id", (req, res) => {
 });
 
 // ==========================
-app.listen(3000, () =>
-  console.log("Servidor de licenças rodando em https://licencas-bot.onrender.com/api")
-);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor de licenças rodando na porta ${PORT}`);
+});
+
