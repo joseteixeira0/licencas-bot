@@ -5,16 +5,7 @@ const cors = require("cors");
 const crypto = require("crypto");
 
 const app = express();
-
-// ==========================
-// Configuração CORS
-// Permite requisições do localhost e do seu front-end hospedado
-app.use(cors({
-  origin: ['http://127.0.0.1:5500', 'https://licencas-bot.onrender.com'], // Adicione outras origens se precisar
-  methods: ['GET','POST','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type']
-}));
-
+app.use(cors());
 app.use(express.json());
 
 const DB_FILE = path.join(__dirname, "licencas.json");
@@ -58,7 +49,7 @@ app.post("/api/criar", (req, res) => {
     criacao: new Date().toISOString(),
     ativacoes: [],
     maxDevices: maxDevices || 1,
-    devices: []
+    devices: [] // lista dos dispositivos que ativaram
   };
 
   licencas.push(nova);
@@ -81,15 +72,67 @@ app.get("/api/licencas/:chave", (req, res) => {
   const lic = licencas.find(l => l.chave.toUpperCase() === chave);
 
   if (!lic) return res.status(404).json({ erro: "Licença não encontrada" });
-
   res.json(lic);
+});
+
+// ==========================
+// Ativar licença (valida dispositivo e limite)
+app.post("/api/ativar/:chave", (req, res) => {
+  const { deviceId } = req.body;
+  const chave = req.params.chave.toUpperCase();
+  const licencas = carregarLicencas();
+
+  const lic = licencas.find(l => l.chave.toUpperCase() === chave);
+  if (!lic) return res.status(404).json({ erro: "Licença não encontrada" });
+  if (!lic.ativa) return res.status(403).json({ erro: "Licença inativa" });
+  if (lic.bloqueado) return res.status(403).json({ erro: "Licença bloqueada" });
+
+  // Verifica validade
+  if (lic.validade && new Date(lic.validade) < new Date())
+    return res.status(403).json({ erro: "Licença expirada" });
+
+  // Já ativada neste dispositivo?
+  const jaAtivada = lic.devices.some(d => d.deviceId === deviceId);
+  if (jaAtivada) {
+    return res.json({ sucesso: true, msg: "Dispositivo já ativado" });
+  }
+
+  // Limite de dispositivos atingido?
+  if (lic.devices.length >= lic.maxDevices) {
+    return res.status(403).json({ erro: "Limite de dispositivos atingido" });
+  }
+
+  lic.devices.push({ deviceId, ativadoEm: new Date().toISOString() });
+  salvarLicencas(licencas);
+
+  res.json({ sucesso: true, msg: "Licença ativada com sucesso" });
+});
+
+// ==========================
+// Desativar licença (libera um slot)
+app.post("/api/desativar/:chave", (req, res) => {
+  const { deviceId } = req.body;
+  const chave = req.params.chave.toUpperCase();
+  const licencas = carregarLicencas();
+
+  const lic = licencas.find(l => l.chave.toUpperCase() === chave);
+  if (!lic) return res.status(404).json({ erro: "Licença não encontrada" });
+
+  const index = lic.devices.findIndex(d => d.deviceId === deviceId);
+  if (index === -1)
+    return res.status(404).json({ erro: "Dispositivo não encontrado nesta licença" });
+
+  lic.devices.splice(index, 1);
+  salvarLicencas(licencas);
+
+  res.json({ sucesso: true, msg: "Dispositivo removido da licença" });
 });
 
 // ==========================
 // Bloquear/Desbloquear licença
 app.post("/api/bloquear/:id", (req, res) => {
   const { senha } = req.body;
-  const MASTER_SENHA = "123456"; // Defina uma senha forte
+  const MASTER_SENHA = "123456"; // ⚠️ troque por uma senha segura
   if (senha !== MASTER_SENHA) return res.status(403).json({ erro: "Senha incorreta" });
 
   const licencas = carregarLicencas();
@@ -126,7 +169,6 @@ app.delete("/api/excluir/:id", (req, res) => {
 });
 
 // ==========================
-// Porta do Render ou localhost
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor de licenças rodando na porta ${PORT}`);
