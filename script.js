@@ -5,17 +5,16 @@ const API_URL = "https://licencas-bot.onrender.com/api"; // URL do servidor Rend
 async function carregarLicencas() {
   try {
     const res = await fetch(`${API_URL}/licencas`);
-    if (!res.ok) throw new Error("Erro ao buscar licenças");
     const data = await res.json();
 
     const tabela = document.getElementById("tabelaLicencas");
     tabela.innerHTML = "";
 
     data.forEach(l => {
-      const validadeTexto = l.validade ? new Date(l.validade).toLocaleDateString() : "Vitalícia";
-      const statusTexto = l.ativa ? (l.bloqueado ? "🔒 Bloqueada" : "✅ Ativa") : "❌ Inativa";
-      const usados = Array.isArray(l.devices) ? l.devices.length : 0;
-      const limite = l.maxDevices ?? 1;
+      const validadeTexto = l.validade ? new Date(l.validade).toLocaleDateString() : 'Vitalícia';
+      const statusTexto = l.ativa ? (l.bloqueado ? '🔒 Bloqueada' : '✅ Ativa') : '❌ Inativa';
+      const usados = l.devices ? l.devices.length : 0;
+      const limite = l.maxDevices || 1;
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -25,10 +24,9 @@ async function carregarLicencas() {
         <td>${statusTexto}</td>
         <td>${usados}/${limite}</td>
         <td>
-          <button class="revogar" onclick="revogar('${l._id || l.id}')">Revogar</button>
-          <button class="bloquear" onclick="toggleBloqueio('${l._id || l.id}')">
-            ${l.bloqueado ? "Desbloquear" : "Bloquear"}
-          </button>
+          <button class="revogar" onclick="revogar('${l.id}')">Revogar</button>
+          <button class="bloquear" onclick="toggleBloqueio('${l.id}')">${l.bloqueado ? 'Desbloquear' : 'Bloquear'}</button>
+          <button class="excluir" onclick="excluir('${l.id}')">Excluir</button>
         </td>
       `;
       tabela.appendChild(tr);
@@ -42,10 +40,10 @@ async function carregarLicencas() {
 // ==========================
 // GERAR NOVA LICENÇA
 async function gerarLicenca() {
-  const cliente = document.getElementById("cliente").value.trim();
+  const cliente = document.getElementById("cliente").value;
   const ilimitado = document.getElementById("tempoIlimitado").checked;
   const dias = ilimitado ? 0 : Number(document.getElementById("dias").value);
-  const maxDevices = Number(prompt("Quantos dispositivos esta licença pode usar? (ex: 1, 2, 3...)")) || 1;
+  const maxDevices = Number(document.getElementById("limite").value) || 1;
 
   if (!cliente) {
     alert("Digite o nome do cliente.");
@@ -59,10 +57,8 @@ async function gerarLicenca() {
       body: JSON.stringify({ cliente, dias, maxDevices })
     });
 
-    if (!res.ok) throw new Error("Erro ao gerar licença");
     const nova = await res.json();
-
-    alert(`✅ Licença criada com sucesso!\n\nChave: ${nova.chave}\nLimite: ${maxDevices} dispositivo(s)`);
+    alert(`Chave gerada: ${nova.chave}\nLimite de dispositivos: ${maxDevices}`);
     carregarLicencas();
   } catch (err) {
     console.error("Erro ao gerar licença:", err);
@@ -76,8 +72,7 @@ async function revogar(id) {
   if (!confirm("Tem certeza que deseja revogar esta licença?")) return;
 
   try {
-    const res = await fetch(`${API_URL}/revogar/${id}`, { method: "POST" });
-    if (!res.ok) throw new Error("Erro ao revogar");
+    await fetch(`${API_URL}/revogar/${id}`, { method: "POST" });
     carregarLicencas();
   } catch (err) {
     console.error("Erro ao revogar licença:", err);
@@ -98,13 +93,11 @@ async function toggleBloqueio(id) {
       body: JSON.stringify({ senha })
     });
 
-    if (!res.ok) throw new Error("Erro ao processar bloqueio");
     const json = await res.json();
-
     if (json.erro) {
-      alert(`❌ ${json.erro}`);
+      alert(json.erro);
     } else {
-      alert(json.bloqueado ? "🔒 Usuário bloqueado" : "✅ Usuário desbloqueado");
+      alert(json.bloqueado ? "Usuário bloqueado" : "Usuário desbloqueado");
     }
 
     carregarLicencas();
@@ -115,7 +108,21 @@ async function toggleBloqueio(id) {
 }
 
 // ==========================
-// DESATIVA INPUT DE DIAS SE ILIMITADO
+// EXCLUIR LICENÇA
+async function excluir(id) {
+  if (!confirm("Tem certeza que deseja excluir esta licença permanentemente?")) return;
+
+  try {
+    await fetch(`${API_URL}/excluir/${id}`, { method: "DELETE" });
+    carregarLicencas();
+  } catch (err) {
+    console.error("Erro ao excluir licença:", err);
+    alert("Erro ao excluir licença. Verifique se o servidor está online.");
+  }
+}
+
+// ==========================
+// DESATIVA INPUT DE DIAS SE TEMPO ILIMITADO ESTIVER MARCADO
 document.getElementById("tempoIlimitado").addEventListener("change", function() {
   document.getElementById("dias").disabled = this.checked;
 });
@@ -126,5 +133,5 @@ document.getElementById("btnGerar").onclick = gerarLicenca;
 document.getElementById("btnAtualizar").onclick = carregarLicencas;
 
 // ==========================
-// CARREGAR AO ABRIR
+// CARREGAR LICENÇAS AO ABRIR PÁGINA
 window.onload = carregarLicencas;

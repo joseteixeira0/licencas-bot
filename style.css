@@ -197,3 +197,12 @@ td button.bloquear:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Botão Excluir - vermelho escuro */
+td button.excluir {
+  background-color: #c0392b;
+}
+
+td button.excluir:hover {
+  background-color: #a93226;
+}
