@@ -5,12 +5,21 @@ const cors = require("cors");
 const crypto = require("crypto");
 
 const app = express();
-app.use(cors());
+
+// ==========================
+// Configuração CORS
+// Permite requisições do localhost e do seu front-end hospedado
+app.use(cors({
+  origin: ['http://127.0.0.1:5500', 'https://licencas-bot.onrender.com'], // Adicione outras origens se precisar
+  methods: ['GET','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public"))); // serve HTML/JS
 
 const DB_FILE = path.join(__dirname, "licencas.json");
 
+// ==========================
 // Funções auxiliares
 function carregarLicencas() {
   if (!fs.existsSync(DB_FILE)) return [];
@@ -25,12 +34,14 @@ function salvarLicencas(licencas) {
   fs.writeFileSync(DB_FILE, JSON.stringify(licencas, null, 2));
 }
 
+// ==========================
 // Criar nova licença
 app.post("/api/criar", (req, res) => {
   const { cliente, dias, maxDevices } = req.body;
   const licencas = carregarLicencas();
 
   const chave = crypto.randomBytes(8).toString("hex").toUpperCase();
+
   let validade = null;
   if (dias && dias > 0) {
     validade = new Date();
@@ -41,12 +52,13 @@ app.post("/api/criar", (req, res) => {
     id: crypto.randomUUID(),
     cliente,
     chave,
-    validade: validade ? validade.toISOString() : null,
+    validade: validade ? validade.toISOString() : null, // null = vitalícia
     ativa: true,
     bloqueado: false,
     criacao: new Date().toISOString(),
-    devices: [],
-    maxDevices: maxDevices || 1
+    ativacoes: [],
+    maxDevices: maxDevices || 1,
+    devices: []
   };
 
   licencas.push(nova);
@@ -54,26 +66,30 @@ app.post("/api/criar", (req, res) => {
   res.json(nova);
 });
 
+// ==========================
 // Listar todas as licenças
 app.get("/api/licencas", (req, res) => {
-  res.json(carregarLicencas());
+  const licencas = carregarLicencas();
+  res.json(licencas);
 });
 
-// Revogar licença
-app.post("/api/revogar/:id", (req, res) => {
+// ==========================
+// Buscar licença por chave
+app.get("/api/licencas/:chave", (req, res) => {
+  const chave = req.params.chave.toUpperCase();
   const licencas = carregarLicencas();
-  const lic = licencas.find(l => l.id === req.params.id);
+  const lic = licencas.find(l => l.chave.toUpperCase() === chave);
+
   if (!lic) return res.status(404).json({ erro: "Licença não encontrada" });
 
-  lic.ativa = false;
-  salvarLicencas(licencas);
-  res.json({ sucesso: true });
+  res.json(lic);
 });
 
-// Bloquear / desbloquear licença
+// ==========================
+// Bloquear/Desbloquear licença
 app.post("/api/bloquear/:id", (req, res) => {
   const { senha } = req.body;
-  const MASTER_SENHA = "123456";
+  const MASTER_SENHA = "123456"; // Defina uma senha forte
   if (senha !== MASTER_SENHA) return res.status(403).json({ erro: "Senha incorreta" });
 
   const licencas = carregarLicencas();
@@ -85,6 +101,19 @@ app.post("/api/bloquear/:id", (req, res) => {
   res.json({ sucesso: true, bloqueado: lic.bloqueado });
 });
 
+// ==========================
+// Revogar licença
+app.post("/api/revogar/:id", (req, res) => {
+  const licencas = carregarLicencas();
+  const lic = licencas.find(l => l.id === req.params.id);
+  if (!lic) return res.status(404).json({ erro: "Licença não encontrada" });
+
+  lic.ativa = false;
+  salvarLicencas(licencas);
+  res.json({ sucesso: true });
+});
+
+// ==========================
 // Excluir licença
 app.delete("/api/excluir/:id", (req, res) => {
   const licencas = carregarLicencas();
@@ -96,6 +125,9 @@ app.delete("/api/excluir/:id", (req, res) => {
   res.json({ sucesso: true });
 });
 
-// Porta dinâmica para Render
+// ==========================
+// Porta do Render ou localhost
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Servidor de licenças rodando na porta ${PORT}`);
+});
